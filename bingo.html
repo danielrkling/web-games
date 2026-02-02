@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Bingo Card Generator</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: sans-serif;
+      }
+
+      /* Page layout and controls */
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 2px solid #ccc;
+        margin-bottom: 1rem;
+      }
+
+      .controls {
+        max-width: 600px;
+        display: grid;
+        gap: 1rem;
+        flex-direction: column;
+      }
+
+      textarea {
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      input[type="number"],
+      input[type="text"],
+      button {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      /* Bingo Card Styling */
+      bingo-container {
+        display: block;
+        width: 8.5in;
+        height: 5.5in; /* Half of an 11-inch page */
+        padding: 0.25in;
+        box-sizing: border-box;
+        page-break-inside: avoid;
+        border: 2px solid black;
+        margin-bottom: 1rem;
+      }
+
+      bingo-title {
+        display: block;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+      }
+
+
+      bingo-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        border: 1px solid gray;
+        height: calc(100% - 4rem); /* Adjust based on title and header height */
+      }
+
+      bingo-square {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0.5rem;
+        border: 0.5px solid gray;
+        overflow: hidden;
+        word-break: break-word;
+      }
+
+      .free-space {
+        font-weight: bold;
+      }
+
+      /* Print specific styles */
+      @media print {
+        header {
+          display: none;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        bingo-container {
+          margin: 0;
+          border: none; /* Remove border for printing if desired */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="controls">
+        <label for="title">Card Title:</label>
+        <input id="title" type="text" value="BINGO" />
+
+        <label for="words">Enter up to 25 items (one per line):</label>
+        <textarea id="words" class="border" rows="15"></textarea>
+
+        <div>
+          <input type="checkbox" id="includeFreeSpace" checked />
+          <label for="includeFreeSpace">Include Free Space</label>
+        </div>
+
+        <label for="count">Number of Cards:</label>
+        <input id="count" type="number" value="1" min="1" />
+
+        <button id="generate">Generate</button>
+        <button onclick="window.print()">Print</button>
+      </div>
+    </header>
+
+    <main id="container"></main>
+
+    <script>
+      document.getElementById("generate").onclick = generate;
+      document.getElementById("words").value = Array.from(
+        { length: 25 },
+        (_, i) => `Item ${i + 1}`,
+      ).join("\n");
+
+      function generate() {
+        const wordsInput = document.getElementById("words").value;
+        const words = wordsInput
+          .split("\n")
+          .filter((word) => word.trim() !== "");
+        const count = document.getElementById("count").valueAsNumber;
+        const cardTitle = document.getElementById("title").value;
+        const includeFreeSpace =
+          document.getElementById("includeFreeSpace").checked;
+        const container = document.getElementById("container");
+
+        container.innerHTML = ""; // Clear previous cards
+
+        if (words.length < 24) {
+          alert("Please provide at least 24 words for the bingo card.");
+          return;
+        }
+
+        for (let copy = 1; copy <= count; copy++) {
+          const bingoContainer = document.createElement("bingo-container");
+
+          const title = document.createElement("bingo-title");
+          title.innerText = cardTitle;
+
+
+          const grid = document.createElement("bingo-grid");
+          shuffleArray(words);
+
+          for (let index = 0; index < 25; index++) {
+            const div = document.createElement("bingo-square");
+            const isCenterSquare = index === 12;
+
+            if (includeFreeSpace && isCenterSquare) {
+              div.textContent = "FREE";
+              div.classList.add("free-space");
+            } else {
+              div.textContent = words[index];
+            }
+            grid.append(div);
+          }
+
+          bingoContainer.append(title, grid);
+          container.append(bingoContainer);
+        }
+      }
+
+      function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      // Generate one card on initial load
+      generate();
+    </script>
+  </body>
+</html>
